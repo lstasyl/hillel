@@ -8,7 +8,7 @@ requests = "*"
 pandas = "*"
 faker = "*"
 flask = "*"
-numpy = "*"
+csv = "*"
 
 [dev-packages]
 
