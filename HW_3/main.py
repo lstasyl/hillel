@@ -1,7 +1,9 @@
+from http import HTTPStatus
+
 import pandas as pd
 import requests
 from faker import Faker
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 import csv
 
 
@@ -52,25 +54,18 @@ def get_bitcoin_value():
     currency = request.args.get('currency', 'USD')
     count = int(request.args.get('count', 1))
 
-    response = requests.get('https://bitpay.com/api/rates')
-    rates = response.json()
+    url = f"https://bitpay.com/api/rates/{currency}"
+    result = httpx.get(url)
 
-    for rate in rates:
-        if rate['code'] == currency:
-            bitcoin_value = rate['rate'] * count
-            return jsonify(
-                {"currency": currency, "symbol": get_currency_symbol(currency), "bitcoin_value": bitcoin_value})
+    if result.status_code != HTTPStatus.OK:
+        return Response("ERROR: Something went wrong with bitpay.com!", status=result.status_code)
 
-    return jsonify({"error": "Currency not found"}), 404
+    data = result.json()
+    rate = data['rate']
+    total_value = rate * count
 
+    return jsonify({'currency': currency, 'rate': rate, 'count': count, 'total_value': total_value})
 
-def get_currency_symbol(currency_code):
-    symbols = {
-        "USD": "$",
-        "EUR": "€",
-        "UAH": "₴",
-    }
-    return symbols.get(currency_code, currency_code)
 
 if __name__ == '__main__':
     app.run(debug=True)
